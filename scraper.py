@@ -1,5 +1,5 @@
 import requests
-from bs4 import BeautifulSoup, soup
+from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 def get_soup(url, session=requests):
@@ -54,10 +54,8 @@ def scrape_category(url, session=requests):
 
 
 
-def scrape_all_books(url):
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.content, "html.parser")
+def scrape_all_books(url, session=requests):
+    soup = get_soup(url, session=session)
 
     nav = soup.find("ul", class_="nav nav-list")
     if nav is None:
@@ -67,6 +65,5 @@ def scrape_all_books(url):
     all_books = []
     for category in categories:
         category_url = urljoin(url, category["href"])
-        books_in_category = scrape_category(category_url)
-        all_books.extend(books_in_category)
+        all_books.extend(scrape_category(category_url, session=session))
     return all_books
