@@ -1,32 +1,38 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, soup
 from urllib.parse import urljoin
 
-def scrape_book(url):
+def get_soup(url, session=requests):
+    response = session.get(url, timeout=10)
+    response.raise_for_status()
+    return BeautifulSoup(response.content, "html.parser")
 
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-    title = soup.find("h1").string
-    price = soup.find("p", class_="price_color").string
+def scrape_book(url, session=requests):
+    soup = get_soup(url, session)
+
+    title = soup.find("h1").get_text(strip=True)
+
+    breadcrumb_items = soup.find("ul", class_="breadcrumb").find_all("li")
+    category = breadcrumb_items[2].get_text(strip=True) if len(breadcrumb_items) > 2 else None
+
     rating = soup.find("p", class_="star-rating")["class"][1]
-    category = soup.find("ul", class_="breadcrumb").find_all("li")[2].find("a").string
-    description = soup.find("div", id="product_description").find_next_sibling("p").string
+
+    desc_div = soup.find("div", id="product_description")
+    description = desc_div.find_next_sibling("p").get_text(strip=True) if desc_div else None
+    img_relative = soup.find("div", class_="item active").find("img")["src"]
+    image_url = urljoin(url, img_relative)
+
     table = soup.find("table", class_="table-striped")
-    img_src = url  + soup.find("div", class_="item active").find("img")["src"]
-    image_url = img_src.replace("../../", "")
-    rows = table.find_all("td")
-    upc = rows[0].string
-    price_excl_tax = rows[2].string
-    price_incl_tax = rows[3].string
-    quantity_available = rows[5].string
+    rows = table.find_all("tr")
+    table_data = {row.find("th").get_text(strip=True): row.find("td").get_text(strip=True) for row in rows}
 
     return {
         "product_page_url": url,
-        "universal_product_code": upc,
+        "universal_product_code": table_data.get("UPC"),
         "book_title": title,
-        "price_including_tax": price_incl_tax,
-        "price_excluding_tax": price_excl_tax,
-        "quantity_available": quantity_available,
+        "price_including_tax": table_data.get("Price (incl. tax)"),
+        "price_excluding_tax": table_data.get("Price (excl. tax)"),
+        "quantity_available": table_data.get("Availability"),
         "product_description": description,
         "category": category,
         "review_rating": rating,
@@ -35,21 +41,32 @@ def scrape_book(url):
 
 
 
-def scrape_category(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, "html.parser")
-    books = soup.find_all("article", class_="product_pod")
-
+def scrape_category(url, session=requests):
     all_books = []
-    for book in books:
-        href = book.find("a")["href"]
-        link = urljoin(url, href)
-        book_data = scrape_book(link)
-        all_books.append(book_data)
-
+    while url:
+        soup = get_soup(url, session=session)
+        for book in soup.find_all("article", class_="product_pod"):
+            link = urljoin(url, book.find("a")["href"])
+            all_books.append(scrape_book(link, session=session))
+        next_link = soup.find("li", class_="next")
+        url = urljoin(url, next_link.find("a")["href"]) if next_link else None
     return all_books
 
+
+
 def scrape_all_books(url):
-    ...
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "html.parser")
 
+    nav = soup.find("ul", class_="nav nav-list")
+    if nav is None:
+        raise ValueError("Category nav not found, page structure may have changed")
 
+    categories = nav.find_all("a")[1:]
+    all_books = []
+    for category in categories:
+        category_url = urljoin(url, category["href"])
+        books_in_category = scrape_category(category_url)
+        all_books.extend(books_in_category)
+    return all_books
