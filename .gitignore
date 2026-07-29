@@ -1,4 +1,6 @@
 env/
-book_data.csv
-req.pdf
-main.py
+__pycache__
+images
+book.data.csv
+
+
