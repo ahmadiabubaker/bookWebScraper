@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+import os
 
 url = "https://books.toscrape.com/" 
 
@@ -29,7 +30,9 @@ price_incl_tax = rows[3].string
 quantity_available = rows[5].string
 
 
-with open("book_data.csv", "w", newline="", encoding="utf-8") as csvfile:
+os.makedirs("data", exist_ok=True)
+
+with open(os.path.join("data", "book_data.csv"), "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["product_page_url", "universal_product_code", "book_title", "price_including_tax", "price_excluding_tax", "quantity_available", "product_description", "category", "review_rating", "image_url"])
     writer.writerow([link, upc, title, price_incl_tax, price_excl_tax, quantity_available, description, category, rating, image_url])

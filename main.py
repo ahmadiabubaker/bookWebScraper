@@ -23,10 +23,12 @@ def main():
                   "price_including_tax", "price_excluding_tax", "quantity_available",
                   "product_description", "category", "review_rating", "image_url"]
 
+    os.makedirs("data", exist_ok=True)
+
     with requests.Session() as session:
         books = scrape_all_books(base_url, session=session)
 
-        with open("book_data.csv", "w", newline="", encoding="utf-8") as f:
+        with open(os.path.join("data", "book_data.csv"), "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(books)
