@@ -1,10 +1,5 @@
-"""Entry point that runs the full ETL pipeline.
-
-ETL is a way of splitting a data job into three stages:
-
-  EXTRACT   pull raw data out of its source, as it comes, without judging it
-  TRANSFORM reshape that raw data into a clean, consistent structure
-  LOAD      write the finished result somewhere it will persist
+"""
+Main entry point for the ETL pipeline.
 
 Here, Extract and Transform live in scraper.py, which fetches the pages and
 turns each one into a uniform dictionary. This file is the Load stage plus
@@ -63,9 +58,9 @@ def main():
 
     # One Session for the whole run. It keeps the TCP connection open between
     # requests instead of reopening it for each of the thousand-plus fetches.
-    with requests.Session() as session:
+    with requests.Session() as s:
         # EXTRACT and TRANSFORM: crawl the site and get back clean records.
-        books = scrape_all_books(base_url, session=session)
+        books = scrape_all_books(base_url, session=s)
 
         # LOAD, part one: every record as a row of the CSV. DictWriter maps
         # each dictionary key to its column, so order in the dict is irrelevant.
@@ -77,7 +72,7 @@ def main():
         # LOAD, part two: the cover images. This runs after the CSV so that
         # the text data is safely on disk before the slower image downloads.
         for book in books:
-            download_image(book["image_url"], book["category"], session=session)
+            download_image(book["image_url"], book["category"], session=s)
 
 if __name__ == "__main__":
     main()
