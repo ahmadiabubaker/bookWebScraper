@@ -1,7 +1,7 @@
 """
 Main entry point for the ETL pipeline.
 
-Here, Extract and Transform live in scraper.py, which fetches the pages and
+Here, Extract and Transform live in book_scrapper.py, which fetches the pages and
 turns each one into a uniform dictionary. This file is the Load stage plus
 the orchestration that runs the three in order.
 
@@ -15,7 +15,7 @@ import os
 import requests
 from urllib.parse import urlparse
 
-from scraper import scrape_all_books
+from book_scrapper import scrape_all_books
 
 def download_image(image_url, category, session=requests):
     """LOAD: save one cover image to disk, filed under its category.

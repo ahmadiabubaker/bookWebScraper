@@ -21,8 +21,8 @@ All requests share a single `requests.Session`, which reuses the connection and 
 | File | Purpose |
 | --- | --- |
 | `main.py` | Entry point. Runs the scrape, writes the CSV, downloads the images. |
-| `scraper.py` | The scraping logic: one book, one category, and the whole site. |
-| `single_book.py` | A standalone script that scrapes only the first book on the home page. Written while working out the selectors, and kept as a small reference. |
+| `book_scrapper.py` | The scraping logic: one book, one category, and the whole site. |
+| `prototype_single_book.py` | A standalone script that scrapes only the first book on the home page. Written while working out the selectors, and kept as a small reference. Not used in production and not run when you run `main.py`. |
 | `requirements.txt` | Pinned dependencies. |
 
 ### Output
