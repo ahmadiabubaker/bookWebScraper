@@ -15,7 +15,7 @@ import os
 import requests
 from urllib.parse import urlparse
 
-from book_scrapper import scrape_all_books
+from book_scraper import scrape_all_books
 
 def download_image(image_url, category, session=requests):
     """LOAD: save one cover image to disk, filed under its category.
